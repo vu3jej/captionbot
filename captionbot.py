@@ -1,28 +1,11 @@
 import json
-import logging
+import mimetypes
+from collections import namedtuple
+from pathlib import Path
 
 import requests
 
-API_URL = "https://captionbot.azurewebsites.net/api/messages"
-
-
-class Caption(object):
-    def __init__(self):
-        super(Caption, self).__init__()
-        self.caption = None
-        self.image_url = None
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.image_url, self.caption})"
-
-    @classmethod
-    def from_dict(klass, response, parser):
-        c = klass()
-        # Add the caption from the returned JSON object to instance.
-        setattr(c, "caption", response.json())
-        setattr(c, "image_url", response.request.body["Content"])
-
-        return c
+Caption = namedtuple("Caption", "text")
 
 
 class CaptionBotAPI(object):
@@ -30,23 +13,42 @@ class CaptionBotAPI(object):
         super(CaptionBotAPI, self).__init__()
         self._session = requests.session()
 
-    def parse(self, image_url):
+    def from_url(self, image_url):
+        """Build caption for a given URL"""
+        url = "https://captionbot.azurewebsites.net/api/messages"
         querystring = {"language": "en-US"}
         headers = {"Content-Type": "application/json"}
         payload = {"Type": "CaptionRequest", "Content": image_url}
 
-        try:
-            r = self._session.post(
-                url=API_URL,
-                data=json.dumps(obj=payload),
-                headers=headers,
-                params=querystring,
-            )
-            r.raise_for_status()
-        except Exception as exc:
-            if hasattr(exc, "message"):
-                logging.error(msg=f"{self.__class__.__name__}: {exc.message}")
+        response = self._session.post(
+            url=url,
+            data=json.dumps(obj=payload),
+            headers=headers,
+            params=querystring,
+        )
+
+        if not response.ok:
             return
 
-        caption = Caption.from_dict(response=r, parser=self)
-        return caption
+        if response.text:
+            caption = Caption(text=response.text)
+            return caption
+
+    def from_file(self, filename):
+        """Build caption for a given filename"""
+        url = "https://www.captionbot.ai/api/upload"
+        content_type, encoding = mimetypes.guess_type(url=filename)
+
+        path = Path(filename)
+        name = path.name
+        files = {"file": (name, path.read_bytes(), content_type)}
+
+        response = self._session.post(url=url, files=files)
+
+        if not response.ok:
+            return
+
+        if response.text:
+            # Remove double quotes from the URL
+            image_url = response.text[1:-1]
+            return self.from_url(image_url=image_url)
