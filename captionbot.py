@@ -9,9 +9,9 @@ import requests
 Caption = namedtuple("Caption", "text")
 
 
-class CaptionBotAPI:
+class CaptionBot:
     def __init__(self) -> None:
-        super(CaptionBotAPI, self).__init__()
+        super(CaptionBot, self).__init__()
         self._session = requests.session()
 
     def from_url(self, image_url: str) -> Union[NamedTuple, None]:
