@@ -32,7 +32,7 @@ class CaptionBotAPI:
             return
 
         if response.text:
-            caption = Caption(text=response.text)
+            caption = Caption(text=response.json())
             return caption
 
     def from_file(self, filename: str) -> Union[NamedTuple, None]:
@@ -50,6 +50,5 @@ class CaptionBotAPI:
             return
 
         if response.text:
-            # Remove double quotes from the URL
-            image_url = response.text[1:-1]
+            image_url = response.json()
             return self.from_url(image_url=image_url)
