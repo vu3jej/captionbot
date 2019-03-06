@@ -2,18 +2,19 @@ import json
 import mimetypes
 from collections import namedtuple
 from pathlib import Path
+from typing import NamedTuple, Union
 
 import requests
 
 Caption = namedtuple("Caption", "text")
 
 
-class CaptionBotAPI(object):
-    def __init__(self):
+class CaptionBotAPI:
+    def __init__(self) -> None:
         super(CaptionBotAPI, self).__init__()
         self._session = requests.session()
 
-    def from_url(self, image_url):
+    def from_url(self, image_url: str) -> Union[NamedTuple, None]:
         """Build caption for a given URL"""
         url = "https://captionbot.azurewebsites.net/api/messages"
         querystring = {"language": "en-US"}
@@ -34,7 +35,7 @@ class CaptionBotAPI(object):
             caption = Caption(text=response.text)
             return caption
 
-    def from_file(self, filename):
+    def from_file(self, filename: str) -> Union[NamedTuple, None]:
         """Build caption for a given filename"""
         url = "https://www.captionbot.ai/api/upload"
         content_type, encoding = mimetypes.guess_type(url=filename)
