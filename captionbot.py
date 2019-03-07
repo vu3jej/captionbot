@@ -31,9 +31,8 @@ class CaptionBot:
         if not response.ok:
             return
 
-        if response.text:
-            caption = Caption(text=response.json())
-            return caption
+        caption = Caption(text=response.json())
+        return caption
 
     def from_file(self, filename: str) -> Union[NamedTuple, None]:
         """Build caption for a given filename"""
@@ -49,6 +48,4 @@ class CaptionBot:
         if not response.ok:
             return
 
-        if response.text:
-            image_url = response.json()
-            return self.from_url(image_url=image_url)
+        return self.from_url(image_url=response.json())
